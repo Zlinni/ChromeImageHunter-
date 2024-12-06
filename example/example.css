@@ -1,0 +1,135 @@
+body {
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto,
+    Arial, sans-serif;
+  max-width: 800px;
+  margin: 0 auto;
+  padding: 20px;
+  background-color: #f8f9fa;
+}
+
+.panel {
+  background-color: white;
+  padding: 20px;
+  border-radius: 8px;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  margin-bottom: 20px;
+}
+
+.status-bar {
+  background-color: #e7f5ff;
+  color: #228be6;
+  padding: 10px;
+  border-radius: 4px;
+  margin-bottom: 15px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.status-bar.connected {
+  background-color: #ebfbee;
+  color: #2f9e44;
+}
+
+.status-indicator {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background-color: #228be6;
+  margin-right: 8px;
+}
+
+.status-bar.connected .status-indicator {
+  background-color: #2f9e44;
+}
+
+.task-list {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+
+.task-item {
+  display: flex;
+  padding: 15px;
+  border-bottom: 1px solid #eee;
+  gap: 15px;
+  flex-direction: column;
+}
+
+.task-item:last-child {
+  border-bottom: none;
+}
+
+.task-header {
+  display: flex;
+  gap: 15px;
+  align-items: flex-start;
+}
+
+.task-image {
+  width: 100px;
+  height: 100px;
+  object-fit: cover;
+  border-radius: 4px;
+}
+
+.task-info {
+  flex: 1;
+}
+
+.task-type {
+  font-weight: 600;
+  color: #228be6;
+  margin-bottom: 5px;
+}
+
+.task-source {
+  font-size: 12px;
+  color: #868e96;
+  margin-bottom: 5px;
+  word-break: break-all;
+}
+
+.task-time {
+  font-size: 12px;
+  color: #868e96;
+}
+
+.task-size {
+  font-size: 12px;
+  color: #868e96;
+}
+
+.task-url {
+  font-family: monospace;
+  font-size: 12px;
+  color: #495057;
+  background-color: #f8f9fa;
+  padding: 8px;
+  border-radius: 4px;
+  margin-top: 10px;
+  word-break: break-all;
+  white-space: pre-wrap;
+}
+
+.empty-message {
+  text-align: center;
+  padding: 20px;
+  color: #868e96;
+}
+
+.copy-button {
+  background-color: #228be6;
+  color: white;
+  border: none;
+  padding: 4px 8px;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 12px;
+  margin-left: 8px;
+}
+
+.copy-button:hover {
+  background-color: #1c7ed6;
+} 

@@ -1,0 +1,112 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="UTF-8" />
+    <title>图片采集插件测试页面</title>
+    <link rel="stylesheet" href="example.css" />
+  </head>
+  <body>
+    <div class="panel">
+      <div id="statusBar" class="status-bar">
+        <div style="display: flex; align-items: center">
+          <div class="status-indicator"></div>
+          <span>等待插件连接...</span>
+        </div>
+        <div id="connectionTime" style="font-size: 12px"></div>
+      </div>
+      <h2>图片任务列表</h2>
+      <div id="taskList" class="task-list">
+        <div class="empty-message">等待接收图片...</div>
+      </div>
+    </div>
+
+    <!-- 引入SDK -->
+    <script type="module">
+      import ChromeImageHunterSDK from "../sdk/dist/index.js";
+
+      const taskList = document.getElementById("taskList");
+      const statusBar = document.getElementById("statusBar");
+      const connectionTime = document.getElementById("connectionTime");
+
+      // 更新连接状态
+      function updateConnectionStatus(connected) {
+        if (connected) {
+          statusBar.classList.add("connected");
+          statusBar.querySelector("span").textContent = "插件已连接";
+          connectionTime.textContent =
+            "连接时间：" + new Date().toLocaleString();
+        } else {
+          statusBar.classList.remove("connected");
+          statusBar.querySelector("span").textContent = "等待插件连接...";
+          connectionTime.textContent = "";
+        }
+      }
+
+      function base64ToBlob(base64) {
+        const bytes = atob(base64.split(",")[1]);
+        const ab = new ArrayBuffer(bytes.length);
+        const ia = new Uint8Array(ab);
+        for (let i = 0; i < bytes.length; i++) {
+          ia[i] = bytes.charCodeAt(i);
+        }
+        return new Blob([ab], { type: "image/png" });
+      }
+
+      // 初始化SDK
+      const sdk = new ChromeImageHunterSDK({
+        onConnect: () => {
+          console.log("插件已连接");
+          updateConnectionStatus(true);
+        },
+        onDisconnect: () => {
+          console.log("插件已断开");
+          updateConnectionStatus(false);
+        },
+        onImage: (base64) => {
+          console.log("收到图片:", base64);
+
+          // 清除空消息
+          const emptyMessage = taskList.querySelector(".empty-message");
+          if (emptyMessage) {
+            emptyMessage.remove();
+          }
+
+          const blob = base64ToBlob(base64);
+          const url = URL.createObjectURL(blob);
+
+          // 创建任务项
+          const taskItem = document.createElement("div");
+          taskItem.className = "task-item";
+
+          const now = new Date();
+          taskItem.innerHTML = `
+            <div class="task-header">
+              <img src="${base64}" class="task-image" alt="截图预览">
+              <div class="task-info">
+                <div class="task-type">区域截图</div>
+                <div class="task-time">${now.toLocaleString()}</div>
+                <div class="task-size">点击图片查看原图</div>
+              </div>
+            </div>
+            <div class="task-url">
+              ${url}
+            </div>
+          `;
+
+          // 添加点击图片查看原图的功能
+          const taskImage = taskItem.querySelector(".task-image");
+          taskImage.style.cursor = "pointer";
+          taskImage.onclick = () => window.open(url, "_blank");
+
+          // 将新任务添加到列表顶部
+          taskList.insertBefore(taskItem, taskList.firstChild);
+        },
+      });
+
+      // 页面卸载时销毁SDK实例
+      window.addEventListener("unload", () => {
+        sdk.destroy();
+      });
+    </script>
+  </body>
+</html>

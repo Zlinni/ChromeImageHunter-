@@ -1,0 +1,30 @@
+{
+  "manifest_version": 3,
+  "name": "网页图片采集助手",
+  "version": "1.0",
+  "description": "一键采集网页中的图片、截图等内容",
+  "permissions": ["activeTab", "contextMenus", "storage", "scripting", "tabs"],
+  "host_permissions": ["<all_urls>"],
+  "action": {
+    "default_popup": "popup.html"
+  },
+  "background": {
+    "service_worker": "background.js",
+    "type": "module"
+  },
+  "content_scripts": [
+    {
+      "matches": ["<all_urls>"],
+      "js": ["lib/html2canvas.min.js", "env.js", "content.js"],
+      "css": ["content.css"],
+      "type": "module",
+      "run_at": "document_start"
+    }
+  ],
+  "web_accessible_resources": [
+    {
+      "resources": ["lib/*", "env.js"],
+      "matches": ["<all_urls>"]
+    }
+  ]
+}
