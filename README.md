@@ -72,14 +72,14 @@
    };
    ```
 
-[](./docs/static/Snipaste_2024-12-06_14-04-24.png)
+![](./docs/static/Snipaste_2024-12-06_14-04-24.png)
 
 ## 2. 示例页面
 
 ### 功能展示
 
 - 实时预览采集的图片
-  [](./docs/static/Snipaste_2024-12-06_14-13-55.png)
+  ![](./docs/static/Snipaste_2024-12-06_14-13-55.png)
 
 ### 使用方法
 
