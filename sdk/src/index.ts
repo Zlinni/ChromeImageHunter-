@@ -1,7 +1,20 @@
+interface ChromeImageHunterSDKMessage {
+  type: "FROM_EXTENSION" | "FROM_CONTENT";
+  action: string;
+  timestamp: number;
+  sourceUrl: string;
+  targetOrigin: string;
+  taskType: string;
+  base64?: string;
+  typedArray?: number[];
+}
 interface ChromeImageHunterSDKOptions {
   onConnect?: () => void;
   onDisconnect?: () => void;
-  onImage?: (blob: Blob) => void;
+  onImage?: (option: {
+    blob: Blob;
+    message: ChromeImageHunterSDKMessage;
+  }) => void;
 }
 
 export class ChromeImageHunterSDK {
@@ -31,7 +44,9 @@ export class ChromeImageHunterSDK {
     return arrayBuffer;
   }
 
-  private handleMessage = (event: MessageEvent) => {
+  private handleMessage = (
+    event: MessageEvent<ChromeImageHunterSDKMessage>
+  ) => {
     const data = event.data;
 
     if (data && data.type === "FROM_EXTENSION") {
@@ -49,11 +64,18 @@ export class ChromeImageHunterSDK {
         const arrayBuffer = data.typedArray
           ? this.typedArrayToBuffer(data.typedArray)
           : undefined;
+        const blobParts = data.base64 ?? arrayBuffer;
+        if (!blobParts) {
+          return;
+        }
         // 判断是base64还是arrayBuffer，并转为blob返回
-        const blob = new Blob([data.base64 ?? arrayBuffer], {
+        const blob = new Blob([blobParts], {
           type: "image/png",
         });
-        this.options.onImage?.(blob);
+        this.options.onImage?.({
+          blob,
+          message: data,
+        });
       }
     }
   };

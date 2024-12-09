@@ -62,8 +62,8 @@
           console.log("插件已断开");
           updateConnectionStatus(false);
         },
-        onImage: (blob) => {
-          console.log("收到图片:", blob);
+        onImage: (option) => {
+          console.log("收到图片:", option);
 
           // 清除空消息
           const emptyMessage = taskList.querySelector(".empty-message");
@@ -71,7 +71,7 @@
             emptyMessage.remove();
           }
 
-          const url = URL.createObjectURL(blob);
+          const url = URL.createObjectURL(option.blob);
 
           // 创建任务项
           const taskItem = document.createElement("div");
@@ -80,9 +80,10 @@
           const now = new Date();
           taskItem.innerHTML = `
             <div class="task-header">
-              <img src="${url}" class="task-image" alt="截图预览">
+              <img src="${url}" class="task-image" alt="预览">
               <div class="task-info">
-                <div class="task-type">区域截图</div>
+                <div class="task-type">${option.message.taskType}</div>
+                <div class="task-source">来源: ${option.message.sourceUrl}</div>
                 <div class="task-time">${now.toLocaleString()}</div>
                 <div class="task-size">点击图片查看原图</div>
               </div>

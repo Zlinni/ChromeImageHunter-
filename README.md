@@ -87,17 +87,17 @@
 2. 示例页面会自动连接到插件
 3. 可以实时查看采集结果
 
-## 3. ChromeImageHunterSDK (自行构建)
+## 3. ChromeImageHunterSDK
 
 ### 功能特点
-
 - 提供标准化的接口
 - 支持 TypeScript
 - 模块化设计
 - 完整的类型定义
+- 支持 base64 和 TypedArray 两种图片数据格式
+- 自动处理消息通信
 
 ### 安装使用
-
 ```bash
 cd sdk
 pnpm install
@@ -105,7 +105,6 @@ pnpm run build
 ```
 
 ### API 示例
-
 ```typescript
 import ChromeImageHunterSDK from "../sdk/dist/index.js";
 
@@ -113,8 +112,20 @@ const sdk = new ChromeImageHunterSDK({
   onConnect: () => {
     console.log("插件已连接");
   },
-  onImage: (base64) => {
-    console.log("收到图片:", base64);
+  onDisconnect: () => {
+    console.log("插件已断开");
+  },
+  onImage: ({ blob, message }) => {
+    // blob: 图片的 Blob 对象
+    // message: 包含图片来源、时间戳等完整消息
+    console.log("收到图片:", blob);
+    console.log("图片信息:", message);
+    
+    // 使用示例：
+    const imageUrl = URL.createObjectURL(blob);
+    const img = document.createElement('img');
+    img.src = imageUrl;
+    document.body.appendChild(img);
   },
 });
 
@@ -125,16 +136,30 @@ console.log("是否已连接:", sdk.isConnected());
 sdk.destroy();
 ```
 
-### SDK 配置
-
+### SDK 类型定义
 ```typescript
+// 消息接口
+interface ChromeImageHunterSDKMessage {
+  type: "FROM_EXTENSION" | "FROM_CONTENT";
+  action: string;
+  timestamp: number;
+  sourceUrl: string;
+  targetOrigin: string;
+  taskType: string;
+  base64?: string;
+  typedArray?: number[];
+}
+
+// SDK 配置接口
 interface ChromeImageHunterSDKOptions {
   onConnect?: () => void;
   onDisconnect?: () => void;
-  onImage?: (base64: string) => void;
+  onImage?: (option: {
+    blob: Blob;
+    message: ChromeImageHunterSDKMessage;
+  }) => void;
 }
 ```
-
 # TODO
 
 - [ ] 历史记录管理
