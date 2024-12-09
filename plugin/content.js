@@ -33,6 +33,14 @@ async function urlToBase64(url) {
   });
 }
 
+// 将url转为Uint8Array
+async function urlToUint8Array(url) {
+  const response = await fetch(url);
+  const arrayBuffer = await response.arrayBuffer();
+  const typedArray = new Uint8Array(arrayBuffer);
+  return Array.from(typedArray);
+}
+
 // 发送连接请求
 function sendConnectRequest() {
   // 发送连接请求给当前页面
@@ -66,6 +74,22 @@ async function sendBase64ToPage(base64, taskType) {
       type: "FROM_EXTENSION",
       action: "[background]:task-callback",
       base64: base64,
+      taskType,
+      timestamp: Date.now(),
+      sourceUrl: window.location.href,
+      targetOrigin: TARGET_ORIGIN,
+    },
+  });
+}
+
+// 发送typedArray数据到目标页面
+async function sendTypedArrayToPage(typedArray, taskType) {
+  chrome.runtime.sendMessage({
+    action: "forwardToTarget",
+    data: {
+      type: "FROM_EXTENSION",
+      action: "[background]:task-callback",
+      typedArray,
       taskType,
       timestamp: Date.now(),
       sourceUrl: window.location.href,
@@ -158,8 +182,8 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
       break;
     case "[background]:captureImage":
       console.log("开始右键采集");
-      urlToBase64(request.data.imageUrl).then((base64) => {
-        sendBase64ToPage(base64, "右键采集");
+      urlToUint8Array(request.data.imageUrl).then((typedArray) => {
+        sendTypedArrayToPage(typedArray, "右键采集");
       });
       break;
     case "[background]:task-callback":
@@ -214,8 +238,8 @@ function handleDragEnd(e) {
   if (e.target.tagName === "IMG") {
     e.target.classList.remove("image-collector-dragging");
     console.log("准备保存图片:", e.target.src);
-    urlToBase64(e.target.src).then((base64) => {
-      sendBase64ToPage(base64, "拖放采集");
+    urlToUint8Array(e.target.src).then((typedArray) => {
+      sendTypedArrayToPage(typedArray, "拖放采集");
     });
   }
 }
@@ -315,8 +339,8 @@ function batchCaptureImages() {
   Promise.all(
     imageUrls.map(async (url) => {
       console.log("下载图片:", url);
-      const base64 = await urlToBase64(url);
-      await sendBase64ToPage(base64, "批量采集");
+      const typedArray = await urlToUint8Array(url);
+      await sendTypedArrayToPage(typedArray, "批量采集");
     })
   ).catch((error) => {
     console.error("批量下载图片失败:", error);

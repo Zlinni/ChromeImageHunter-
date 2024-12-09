@@ -140,3 +140,4 @@ interface ChromeImageHunterSDKOptions {
 - [ ] 历史记录管理
 - [ ] 采集图片来源信息和元数据
 - [ ] 发布 ChromeImageHunterSDK
+- [✔] 使用 typedArray 方案替代 base64 方案,节省体积

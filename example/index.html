@@ -62,8 +62,8 @@
           console.log("插件已断开");
           updateConnectionStatus(false);
         },
-        onImage: (base64) => {
-          console.log("收到图片:", base64);
+        onImage: (blob) => {
+          console.log("收到图片:", blob);
 
           // 清除空消息
           const emptyMessage = taskList.querySelector(".empty-message");
@@ -71,7 +71,6 @@
             emptyMessage.remove();
           }
 
-          const blob = base64ToBlob(base64);
           const url = URL.createObjectURL(blob);
 
           // 创建任务项
@@ -81,7 +80,7 @@
           const now = new Date();
           taskItem.innerHTML = `
             <div class="task-header">
-              <img src="${base64}" class="task-image" alt="截图预览">
+              <img src="${url}" class="task-image" alt="截图预览">
               <div class="task-info">
                 <div class="task-type">区域截图</div>
                 <div class="task-time">${now.toLocaleString()}</div>
