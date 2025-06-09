@@ -1,6 +1,6 @@
 body {
-  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto,
-    Arial, sans-serif;
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Arial,
+    sans-serif;
   max-width: 800px;
   margin: 0 auto;
   padding: 20px;
@@ -67,7 +67,8 @@ body {
   align-items: flex-start;
 }
 
-.task-image {
+.task-image,
+.task-image-base64 {
   width: 100px;
   height: 100px;
   object-fit: cover;
@@ -132,4 +133,4 @@ body {
 
 .copy-button:hover {
   background-color: #1c7ed6;
-} 
+}

@@ -81,6 +81,9 @@
           taskItem.innerHTML = `
             <div class="task-header">
               <img src="${url}" class="task-image" alt="预览">
+              <img src="${
+                option.message.base64
+              }" class="task-image-base64" alt="预览">
               <div class="task-info">
                 <div class="task-type">${option.message.taskType}</div>
                 <div class="task-source">来源: ${option.message.sourceUrl}</div>
@@ -98,6 +101,13 @@
           taskImage.style.cursor = "pointer";
           taskImage.onclick = () => window.open(url, "_blank");
 
+          const taskImageBase64 = taskItem.querySelector(".task-image-base64");
+          taskImageBase64.style.cursor = "pointer";
+          taskImageBase64.onclick = () => {
+            const blob = base64ToBlob(option.message.base64);
+            const blobUrl = URL.createObjectURL(blob);
+            window.open(blobUrl, "_blank");
+          };
           // 将新任务添加到列表顶部
           taskList.insertBefore(taskItem, taskList.firstChild);
         },

@@ -68,7 +68,7 @@
    ```javascript
    // 共享的配置
    const Config = {
-     TARGET_ORIGIN: "http://127.0.0.1:5501/example/index.html",
+     TARGET_ORIGIN: "http://127.0.0.1:5500/example/index.html",
    };
    ```
 
@@ -90,6 +90,7 @@
 ## 3. ChromeImageHunterSDK
 
 ### 功能特点
+
 - 提供标准化的接口
 - 支持 TypeScript
 - 模块化设计
@@ -98,6 +99,7 @@
 - 自动处理消息通信
 
 ### 安装使用
+
 ```bash
 cd sdk
 pnpm install
@@ -105,6 +107,7 @@ pnpm run build
 ```
 
 ### API 示例
+
 ```typescript
 import ChromeImageHunterSDK from "../sdk/dist/index.js";
 
@@ -120,10 +123,10 @@ const sdk = new ChromeImageHunterSDK({
     // message: 包含图片来源、时间戳等完整消息
     console.log("收到图片:", blob);
     console.log("图片信息:", message);
-    
+
     // 使用示例：
     const imageUrl = URL.createObjectURL(blob);
-    const img = document.createElement('img');
+    const img = document.createElement("img");
     img.src = imageUrl;
     document.body.appendChild(img);
   },
@@ -137,6 +140,7 @@ sdk.destroy();
 ```
 
 ### SDK 类型定义
+
 ```typescript
 // 消息接口
 interface ChromeImageHunterSDKMessage {
@@ -160,6 +164,7 @@ interface ChromeImageHunterSDKOptions {
   }) => void;
 }
 ```
+
 # TODO
 
 - [ ] 历史记录管理
