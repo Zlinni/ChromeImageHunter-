@@ -65,4 +65,13 @@ chrome.runtime.onMessage.addListener(async (request, sender, sendResponse) => {
     });
     return;
   }
+  if (request.action === "toggleHoverButtons") {
+    // 转发给content script处理
+    chrome.tabs.query({ active: true, currentWindow: true }, function (tabs) {
+      chrome.tabs.sendMessage(tabs[0].id, {
+        action: "toggleHoverButtons",
+        enabled: request.enabled,
+      });
+    });
+  }
 });

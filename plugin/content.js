@@ -230,6 +230,14 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
         },
         TARGET_ORIGIN
       );
+    case "toggleHoverButtons":
+      console.log("切换图片悬停按钮:", request.enabled);
+      if (request.enabled) {
+        initImageHoverButtons();
+      } else {
+        // 移除所有采集按钮
+        removeHoverButtons();
+      }
       break;
   }
 });
@@ -381,4 +389,179 @@ function batchCaptureImages() {
   ).catch((error) => {
     console.error("批量下载图片失败:", error);
   });
+}
+
+// 初始化图片采集按钮功能
+function initImageHoverButtons() {
+  // 创建样式
+  const style = document.createElement("style");
+  style.id = "image-collector-hover-styles";
+  style.textContent = `
+    .image-collector-button-container {
+      position: absolute;
+      top: 5px;
+      left: 5px;
+      display: none;
+      z-index: 999999;
+    }
+    
+    .image-collector-button {
+      background-color: rgba(33, 150, 243, 0.9);
+      color: white;
+      border: none;
+      border-radius: 8px;
+      padding: 4px 8px;
+      font-size: 12px;
+      cursor: pointer;
+      box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: all 0.2s ease;
+    }
+    
+    .image-collector-button:hover {
+      background-color: rgba(33, 150, 243, 1);
+      transform: scale(1.05);
+    }
+    
+    /* 移除了图标的CSS */
+    
+    img:hover .image-collector-button-container {
+      display: block;
+    }
+  `;
+  document.head.appendChild(style);
+  // 监听页面上的图片
+  function processImages() {
+    const images = document.getElementsByTagName("img");
+
+    Array.from(images).forEach((img) => {
+      // 检查图片是否已有采集按钮
+      if (img.dataset.collectorProcessed) return;
+
+      // 标记已处理
+      img.dataset.collectorProcessed = "true";
+
+      // 获取图片父元素，并确保它有相对定位
+      const parent = img.parentElement;
+
+      // 忽略太小的图片
+      if (img.width < 50 || img.height < 50) return;
+
+      // 设置父元素为相对定位
+      if (getComputedStyle(parent).position === "static") {
+        parent.style.position = "relative";
+      }
+
+      // 创建按钮容器
+      const buttonContainer = document.createElement("div");
+      buttonContainer.className = "image-collector-button-container";
+
+      // 创建采集按钮
+      const collectButton = document.createElement("button");
+      collectButton.className = "image-collector-button";
+      collectButton.textContent = "采集";
+      collectButton.addEventListener("click", (e) => {
+        e.preventDefault();
+        e.stopPropagation();
+        console.log("开始采集图片:", img.src);
+        // 调用现有的发送图像功能
+        sendUrlToPage(img.src, "按钮采集");
+      });
+
+      // 将按钮添加到容器
+      buttonContainer.appendChild(collectButton);
+
+      // 监听鼠标进入图片
+      img.addEventListener("mouseenter", () => {
+        buttonContainer.style.display = "block";
+      });
+
+      // 监听鼠标离开图片
+      img.addEventListener("mouseleave", (e) => {
+        // 检查鼠标是否进入了按钮容器
+        const rect = buttonContainer.getBoundingClientRect();
+        if (
+          e.clientX >= rect.left &&
+          e.clientX <= rect.right &&
+          e.clientY >= rect.top &&
+          e.clientY <= rect.bottom
+        ) {
+          return; // 如果鼠标在按钮容器内，不隐藏
+        }
+        buttonContainer.style.display = "none";
+      });
+
+      // 监听按钮容器的鼠标离开
+      buttonContainer.addEventListener("mouseleave", () => {
+        buttonContainer.style.display = "none";
+      });
+
+      // 将按钮添加到图片旁边
+      parent.appendChild(buttonContainer);
+
+      // 调整按钮位置
+      buttonContainer.style.position = "absolute";
+      buttonContainer.style.top = img.offsetTop + 10 + "px";
+      buttonContainer.style.left = img.offsetLeft + 10 + "px"; // 改为左侧
+    });
+  }
+  // 初始处理
+  processImages();
+  // 保存observer到window对象以便后续移除
+  window.imageCollectorObserver = new MutationObserver((mutations) => {
+    processImages();
+  });
+
+  window.imageCollectorObserver.observe(document.body, {
+    childList: true,
+    subtree: true,
+  });
+}
+
+function removeHoverButtons() {
+  // 1. 移除所有采集按钮容器
+  const buttons = document.querySelectorAll(
+    ".image-collector-button-container"
+  );
+  buttons.forEach((button) => button.remove());
+
+  // 2. 移除之前添加的样式表
+  const styleElement = document.getElementById("image-collector-hover-styles");
+  if (styleElement) {
+    styleElement.remove();
+  }
+
+  // 3. 移除图片标记
+  const images = document.getElementsByTagName("img");
+  Array.from(images).forEach((img) => {
+    delete img.dataset.collectorProcessed;
+  });
+
+  // 4. 移除已注册的MutationObserver
+  if (window.imageCollectorObserver) {
+    window.imageCollectorObserver.disconnect();
+    window.imageCollectorObserver = null;
+  }
+
+  console.log("已移除所有图片采集按钮");
+}
+
+// 在页面加载完成后检查是否启用图片采集按钮功能
+function initOnPageLoad() {
+  // 检查存储中是否启用了hover按钮
+  chrome.storage.local.get("hoverButtonsActive", function (data) {
+    if (data.hoverButtonsActive) {
+      // 只有在设置为启用时才初始化hover按钮
+      initImageHoverButtons();
+    }
+  });
+}
+
+// 页面加载完成后初始化
+if (document.readyState === "complete") {
+  initOnPageLoad();
+} else {
+  window.addEventListener("load", initOnPageLoad);
 }

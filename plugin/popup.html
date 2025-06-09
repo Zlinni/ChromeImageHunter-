@@ -1,166 +1,176 @@
 <!DOCTYPE html>
 <html>
-<head>
-  <meta charset="UTF-8">
-  <title>网页图片采集助手</title>
-  <style>
-    * {
-      margin: 0;
-      padding: 0;
-      box-sizing: border-box;
-    }
+  <head>
+    <meta charset="UTF-8" />
+    <title>网页图片采集助手</title>
+    <style>
+      * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+      }
 
-    body {
-      width: 320px;
-      padding: 16px;
-      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
-      background-color: #f8f9fa;
-    }
+      body {
+        width: 320px;
+        padding: 16px;
+        font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto,
+          "Helvetica Neue", Arial, sans-serif;
+        background-color: #f8f9fa;
+      }
 
-    .header {
-      margin-bottom: 20px;
-      padding-bottom: 12px;
-      border-bottom: 1px solid #e9ecef;
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-    }
+      .header {
+        margin-bottom: 20px;
+        padding-bottom: 12px;
+        border-bottom: 1px solid #e9ecef;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+      }
 
-    .header h2 {
-      font-size: 18px;
-      color: #212529;
-      font-weight: 600;
-      margin: 0;
-    }
+      .header h2 {
+        font-size: 18px;
+        color: #212529;
+        font-weight: 600;
+        margin: 0;
+      }
 
-    .version {
-      font-size: 12px;
-      color: #6c757d;
-    }
+      .version {
+        font-size: 12px;
+        color: #6c757d;
+      }
 
-    .button-group {
-      display: grid;
-      gap: 10px;
-    }
+      .button-group {
+        display: grid;
+        gap: 10px;
+      }
 
-    .button {
-      width: 100%;
-      padding: 12px;
-      border: none;
-      border-radius: 8px;
-      background-color: #ffffff;
-      color: #495057;
-      cursor: pointer;
-      transition: all 0.3s ease;
-      font-size: 14px;
-      font-weight: 500;
-      display: flex;
-      align-items: center;
-      justify-content: flex-start;
-      box-shadow: 0 1px 3px rgba(0,0,0,0.1);
-    }
+      .button {
+        width: 100%;
+        padding: 12px;
+        border: none;
+        border-radius: 8px;
+        background-color: #ffffff;
+        color: #495057;
+        cursor: pointer;
+        transition: all 0.3s ease;
+        font-size: 14px;
+        font-weight: 500;
+        display: flex;
+        align-items: center;
+        justify-content: flex-start;
+        box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+      }
 
-    .button:hover {
-      background-color: #f8f9fa;
-      transform: translateY(-1px);
-      box-shadow: 0 4px 6px rgba(0,0,0,0.1);
-    }
+      .button:hover {
+        background-color: #f8f9fa;
+        transform: translateY(-1px);
+        box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+      }
 
-    .button.active {
-      background-color: #e7f5ff;
-      color: #228be6;
-    }
+      .button.active {
+        background-color: #e7f5ff;
+        color: #228be6;
+      }
 
-    .button i {
-      font-size: 16px;
-    }
+      .button i {
+        font-size: 16px;
+      }
 
-    .button-icon {
-      width: 24px;
-      height: 24px;
-      margin-right: 8px;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      background-color: #e9ecef;
-      border-radius: 6px;
-      color: #495057;
-    }
+      .button-icon {
+        width: 24px;
+        height: 24px;
+        margin-right: 8px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        background-color: #e9ecef;
+        border-radius: 6px;
+        color: #495057;
+      }
 
-    .button.active .button-icon {
-      background-color: #228be6;
-      color: white;
-    }
+      .button.active .button-icon {
+        background-color: #228be6;
+        color: white;
+      }
 
-    .footer {
-      margin-top: 16px;
-      padding-top: 12px;
-      border-top: 1px solid #e9ecef;
-      font-size: 12px;
-      color: #6c757d;
-      text-align: center;
-    }
+      .footer {
+        margin-top: 16px;
+        padding-top: 12px;
+        border-top: 1px solid #e9ecef;
+        font-size: 12px;
+        color: #6c757d;
+        text-align: center;
+      }
 
-    @keyframes pulse {
-      0% { transform: scale(1); }
-      50% { transform: scale(1.05); }
-      100% { transform: scale(1); }
-    }
+      @keyframes pulse {
+        0% {
+          transform: scale(1);
+        }
+        50% {
+          transform: scale(1.05);
+        }
+        100% {
+          transform: scale(1);
+        }
+      }
 
-    .button:active {
-      transform: translateY(1px);
-      box-shadow: 0 1px 2px rgba(0,0,0,0.1);
-    }
-  </style>
-  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.7.2/font/bootstrap-icons.css">
-</head>
-<body>
-  <div class="header">
-    <h2>网页图片采集助手</h2>
-    <span class="version">v1.0</span>
-  </div>
+      .button:active {
+        transform: translateY(1px);
+        box-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
+      }
+    </style>
+    <link
+      rel="stylesheet"
+      href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.7.2/font/bootstrap-icons.css"
+    />
+  </head>
+  <body>
+    <div class="header">
+      <h2>网页图片采集助手</h2>
+      <span class="version">v1.0</span>
+    </div>
+    <!-- 在popup.html中添加 -->
+    <div class="button-group">
+      <button class="button" id="toggleHoverButtons">启用图片悬浮采集</button>
 
-  <div class="button-group">
-    <button class="button" id="toggleDragMode">
-      <div class="button-icon">
-        <i class="bi bi-hand-index"></i>
-      </div>
-      开启拖放模式
-    </button>
-    
-    <button class="button" id="captureVisible">
-      <div class="button-icon">
-        <i class="bi bi-camera"></i>
-      </div>
-      截取可视区域
-    </button>
-    
-    <button class="button" id="captureFullPage">
-      <div class="button-icon">
-        <i class="bi bi-window-fullscreen"></i>
-      </div>
-      整页截图
-    </button>
-    
-    <button class="button" id="captureSelect">
-      <div class="button-icon">
-        <i class="bi bi-crop"></i>
-      </div>
-      框选截图
-    </button>
-    
-    <button class="button" id="batchCapture">
-      <div class="button-icon">
-        <i class="bi bi-images"></i>
-      </div>
-      批量采集图片
-    </button>
-  </div>
+      <button class="button" id="toggleDragMode">
+        <div class="button-icon">
+          <i class="bi bi-hand-index"></i>
+        </div>
+        开启拖放模式
+      </button>
 
-  <div class="footer">
-    提示：点击相应按钮开始采集图片
-  </div>
+      <button class="button" id="captureVisible">
+        <div class="button-icon">
+          <i class="bi bi-camera"></i>
+        </div>
+        截取可视区域
+      </button>
 
-  <script src="popup.js"></script>
-</body>
-</html> 
+      <button class="button" id="captureFullPage">
+        <div class="button-icon">
+          <i class="bi bi-window-fullscreen"></i>
+        </div>
+        整页截图
+      </button>
+
+      <button class="button" id="captureSelect">
+        <div class="button-icon">
+          <i class="bi bi-crop"></i>
+        </div>
+        框选截图
+      </button>
+
+      <button class="button" id="batchCapture">
+        <div class="button-icon">
+          <i class="bi bi-images"></i>
+        </div>
+        批量采集图片
+      </button>
+    </div>
+
+    <div class="footer">提示：点击相应按钮开始采集图片</div>
+
+    <script src="popup.js"></script>
+  </body>
+</html>
