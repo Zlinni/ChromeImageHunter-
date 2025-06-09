@@ -8,15 +8,25 @@ chrome.runtime.onInstalled.addListener(() => {
   });
 });
 
+// 将url转为Uint8Array
+async function urlToUint8Array(url) {
+  const response = await fetch(url);
+  const arrayBuffer = await response.arrayBuffer();
+  const typedArray = new Uint8Array(arrayBuffer);
+  return Array.from(typedArray);
+}
+
 // 处理菜单点击事件
-chrome.contextMenus.onClicked.addListener((info, tab) => {
+chrome.contextMenus.onClicked.addListener(async (info, tab) => {
   switch (info.menuItemId) {
     case "captureImage":
+      const typedArray = await urlToUint8Array(info.srcUrl);
       // 发送消息给 content script
       chrome.tabs.sendMessage(tab.id, {
         action: "[background]:captureImage",
         data: {
           imageUrl: info.srcUrl,
+          typedArray,
         },
       });
       break;
@@ -40,11 +50,19 @@ async function forwardMessageToTarget(message) {
 }
 
 // 监听来自content script的消息
-chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
+chrome.runtime.onMessage.addListener(async (request, sender, sendResponse) => {
   console.log("Background收到消息:", request);
   if (request.action === "forwardToTarget") {
     // 转发消息到目标页面
     forwardMessageToTarget(request.data);
+    return;
+  }
+  if (request.action === "forwardURLToTarget") {
+    const typedArray = await urlToUint8Array(request.data.url);
+    forwardMessageToTarget({
+      ...request.data,
+      typedArray,
+    });
     return;
   }
 });

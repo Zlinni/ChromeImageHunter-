@@ -33,13 +33,30 @@ async function urlToBase64(url) {
   });
 }
 
-// 将url转为Uint8Array
-async function urlToUint8Array(url) {
-  const response = await fetch(url);
-  const arrayBuffer = await response.arrayBuffer();
-  const typedArray = new Uint8Array(arrayBuffer);
-  return Array.from(typedArray);
+function loadImageWithCORS(url) {
+  return new Promise((resolve, reject) => {
+    const img = new Image();
+    img.crossOrigin = "anonymous";
+    img.onload = () => {
+      const canvas = document.createElement("canvas");
+      canvas.width = img.width;
+      canvas.height = img.height;
+      const ctx = canvas.getContext("2d");
+      ctx.drawImage(img, 0, 0);
+      resolve(canvas.toDataURL("image/png"));
+    };
+    img.onerror = reject;
+    img.src = url;
+  });
 }
+
+// 将url转为Uint8Array
+// async function urlToUint8Array(url) {
+//   const response = await fetch(url);
+//   const arrayBuffer = await response.arrayBuffer();
+//   const typedArray = new Uint8Array(arrayBuffer);
+//   return Array.from(typedArray);
+// }
 
 // 发送连接请求
 function sendConnectRequest() {
@@ -74,6 +91,22 @@ async function sendBase64ToPage(base64, taskType) {
       type: "FROM_EXTENSION",
       action: "[background]:task-callback",
       base64: base64,
+      taskType,
+      timestamp: Date.now(),
+      sourceUrl: window.location.href,
+      targetOrigin: TARGET_ORIGIN,
+    },
+  });
+}
+
+// 发送url数据到background后下载并转发到目标页面
+async function sendUrlToPage(url, taskType) {
+  chrome.runtime.sendMessage({
+    action: "forwardURLToTarget",
+    data: {
+      type: "FROM_EXTENSION",
+      action: "[background]:task-callback",
+      url,
       taskType,
       timestamp: Date.now(),
       sourceUrl: window.location.href,
@@ -182,9 +215,10 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
       break;
     case "[background]:captureImage":
       console.log("开始右键采集");
-      urlToUint8Array(request.data.imageUrl).then((typedArray) => {
-        sendTypedArrayToPage(typedArray, "右键采集");
-      });
+      // urlToUint8Array(request.data.imageUrl).then((typedArray) => {
+      // sendTypedArrayToPage(typedArray, "右键采集");
+      // });
+      sendTypedArrayToPage(request.data.typedArray, "右键采集");
       break;
     case "[background]:task-callback":
       console.log("开始执行任务");
@@ -238,9 +272,10 @@ function handleDragEnd(e) {
   if (e.target.tagName === "IMG") {
     e.target.classList.remove("image-collector-dragging");
     console.log("准备保存图片:", e.target.src);
-    urlToUint8Array(e.target.src).then((typedArray) => {
-      sendTypedArrayToPage(typedArray, "拖放采集");
-    });
+    sendUrlToPage(e.target.src, "拖放采集");
+    // urlToUint8Array(e.target.src).then((typedArray) => {
+    //   sendTypedArrayToPage(typedArray, "拖放采集");
+    // });
   }
 }
 
@@ -339,8 +374,9 @@ function batchCaptureImages() {
   Promise.all(
     imageUrls.map(async (url) => {
       console.log("下载图片:", url);
-      const typedArray = await urlToUint8Array(url);
-      await sendTypedArrayToPage(typedArray, "批量采集");
+      // const typedArray = await urlToUint8Array(url);
+      // await sendTypedArrayToPage(typedArray, "批量采集");
+      sendUrlToPage(url, "批量采集");
     })
   ).catch((error) => {
     console.error("批量下载图片失败:", error);
