@@ -101,13 +101,13 @@
           taskImage.style.cursor = "pointer";
           taskImage.onclick = () => window.open(url, "_blank");
 
-          const taskImageBase64 = taskItem.querySelector(".task-image-base64");
-          taskImageBase64.style.cursor = "pointer";
-          taskImageBase64.onclick = () => {
-            const blob = base64ToBlob(option.message.base64);
-            const blobUrl = URL.createObjectURL(blob);
-            window.open(blobUrl, "_blank");
-          };
+          // const taskImageBase64 = taskItem.querySelector(".task-image-base64");
+          // taskImageBase64.style.cursor = "pointer";
+          // taskImageBase64.onclick = () => {
+          //   const blob = base64ToBlob(option.message.base64);
+          //   const blobUrl = URL.createObjectURL(blob);
+          //   window.open(blobUrl, "_blank");
+          // };
           // 将新任务添加到列表顶部
           taskList.insertBefore(taskItem, taskList.firstChild);
         },

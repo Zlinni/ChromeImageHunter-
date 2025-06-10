@@ -55,6 +55,7 @@
 
    - 点击插件图标打开功能面板
    - 选择需要的功能：
+     - 悬浮采集：使用悬浮按钮采集图片
      - 拖放模式：直接拖拽网页图片
      - 截图模式：框选区域截图
      - 全页面截图：捕获整个页面
@@ -72,11 +73,17 @@
    };
    ```
 
-![](./docs/static/Snipaste_2024-12-06_14-04-24.png)
+![](./docs/static/pluginv2.png)
 
 ## 2. 示例页面
 
 ### 功能展示
+
+- 悬浮采集
+  ![](./docs/static/floatCollect.png)
+
+- 批量采集
+  ![](./docs/static/collectAll.png)
 
 - 实时预览采集的图片
   ![](./docs/static/Snipaste_2024-12-06_14-13-55.png)
@@ -167,7 +174,6 @@ interface ChromeImageHunterSDKOptions {
 
 # TODO
 
-- [ ] 历史记录管理
-- [ ] 采集图片来源信息和元数据
+- [✔] 采集图片来源信息和元数据
 - [ ] 发布 ChromeImageHunterSDK
 - [✔] 使用 typedArray 方案替代 base64 方案,节省体积

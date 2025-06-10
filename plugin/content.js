@@ -368,27 +368,439 @@ function initSelectCapture() {
     selectBox.remove();
   }
 }
-
-// 批量采集图片
+// 批量采集图片功能改造
 function batchCaptureImages() {
+  // 获取所有图片
   const images = document.getElementsByTagName("img");
   console.log("找到图片数量:", images.length);
 
-  const imageUrls = Array.from(images)
-    .map((img) => img.src)
-    .filter((url) => url && url.startsWith("http"));
-  console.log("可下载的图片URL:", imageUrls);
+  // 过滤掉不符合条件的图片（没有src或非http开头的）
+  const validImages = Array.from(images).filter(
+    (img) => img.src && img.src.startsWith("http")
+  );
 
-  Promise.all(
-    imageUrls.map(async (url) => {
-      console.log("下载图片:", url);
-      // const typedArray = await urlToUint8Array(url);
-      // await sendTypedArrayToPage(typedArray, "批量采集");
-      sendUrlToPage(url, "批量采集");
-    })
-  ).catch((error) => {
-    console.error("批量下载图片失败:", error);
+  // 图片信息数组
+  const imageInfos = validImages.map((img) => ({
+    src: img.src,
+    width: img.naturalWidth || img.width,
+    height: img.naturalHeight || img.height,
+    format: getImageFormat(img.src),
+    selected: true, // 默认选中
+  }));
+
+  // 从URL获取图片格式
+  function getImageFormat(url) {
+    const extension = url.split(".").pop().split("?")[0].toLowerCase();
+    const formats = ["jpg", "jpeg", "png", "gif", "webp", "svg", "bmp"];
+
+    if (formats.includes(extension)) {
+      return extension.toUpperCase();
+    }
+
+    // 如果URL没有明确的扩展名，尝试从内容类型推断
+    return "Unknown";
+  }
+
+  // 获取页面中所有不同的图片格式
+  const uniqueFormats = [...new Set(imageInfos.map((img) => img.format))];
+  console.log("检测到的图片格式:", uniqueFormats);
+
+  // 创建弹窗
+  const dialog = createBatchCaptureDialog();
+  // 创建弹窗时使用动态格式
+  function createBatchCaptureDialog() {
+    // 创建弹窗容器
+    const dialog = document.createElement("div");
+    dialog.id = "image-collector-dialog";
+    dialog.className = "image-collector-dialog";
+
+    // 格式选择下拉框HTML
+    let formatOptionsHtml = '<option value="all">所有格式</option>';
+    uniqueFormats.forEach((format) => {
+      formatOptionsHtml += `<option value="${format.toLowerCase()}">${format}</option>`;
+    });
+
+    // 设置弹窗HTML结构
+    dialog.innerHTML = `
+      <div class="image-collector-dialog-content">
+        <!-- 上部分功能区 -->
+        <div class="image-collector-dialog-header">
+          <div class="image-collector-dialog-title">
+            <h2>批量图片采集</h2>
+          </div>
+          <div class="image-collector-dialog-controls">
+            <!-- 格式选择（下拉框）-->
+            <div class="image-collector-control-group">
+              <label>图片格式：</label>
+              <select id="image-format-selector" class="image-collector-select">
+                ${formatOptionsHtml}
+              </select>
+            </div>
+            
+            <!-- 尺寸筛选 -->
+            <div class="image-collector-control-group">
+              <label>最小宽度：<span id="min-width-value">0</span>px</label>
+              <input type="range" id="min-width-slider" min="0" max="1000" step="10" value="0">
+            </div>
+            <div class="image-collector-control-group">
+              <label>最小高度：<span id="min-height-value">0</span>px</label>
+              <input type="range" id="min-height-slider" min="0" max="1000" step="10" value="0">
+            </div>
+            
+            <!-- 操作按钮 -->
+            <div class="image-collector-control-group">
+              <button id="select-all-images" class="image-collector-button">全选</button>
+              <button id="capture-selected-images" class="image-collector-button primary">采集选中图片</button>
+            </div>
+          </div>
+          <div class="image-collector-dialog-close">
+            <button id="close-image-dialog" class="image-collector-close-button">&times;</button>
+          </div>
+        </div>
+        
+        <!-- 下部分展示区 -->
+        <div class="image-collector-dialog-body">
+          <div class="image-collector-images-container" id="image-collector-images">
+            <!-- 图片将动态添加到这里 -->
+            <div class="image-collector-loading">正在加载图片...</div>
+          </div>
+        </div>
+      </div>
+    `;
+
+    // 添加样式
+    const style = document.createElement("style");
+    style.id = "image-collector-dialog-styles";
+    style.textContent = `
+      .image-collector-dialog {
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background-color: rgba(0, 0, 0, 0.8);
+        z-index: 9999999;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        animation: fadeIn 0.3s ease;
+      }
+      
+      .image-collector-dialog-content {
+        width: 90%;
+        height: 90%;
+        background-color: #fff;
+        border-radius: 8px;
+        box-shadow: 0 5px 20px rgba(0, 0, 0, 0.3);
+        display: flex;
+        flex-direction: column;
+        overflow: hidden;
+      }
+      
+      .image-collector-dialog-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: 15px 20px;
+        border-bottom: 1px solid #eee;
+        background-color: #f8f9fa;
+      }
+      
+      .image-collector-dialog-title {
+        flex: 0 0 200px;
+      }
+      
+      .image-collector-dialog-title h2 {
+        margin: 0;
+        font-size: 18px;
+        color: #333;
+      }
+      
+      .image-collector-dialog-controls {
+        flex: 1;
+        display: flex;
+        flex-wrap: wrap;
+        gap: 15px;
+        justify-content: center;
+      }
+      
+      .image-collector-control-group {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+      }
+      
+      .image-collector-select {
+        padding: 6px 10px;
+        border: 1px solid #ddd;
+        border-radius: 4px;
+        background-color: white;
+        min-width: 120px;
+      }
+      
+      .image-collector-dialog-close {
+        flex: 0 0 50px;
+        text-align: right;
+      }
+      
+      .image-collector-close-button {
+        background: none;
+        border: none;
+        font-size: 24px;
+        cursor: pointer;
+        color: #666;
+      }
+      
+      .image-collector-close-button:hover {
+        color: #ff4d4f;
+      }
+      
+      .image-collector-dialog-body {
+        flex: 1;
+        padding: 20px;
+        overflow-y: auto;
+        background-color: #f0f2f5;
+      }
+      
+      .image-collector-images-container {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+        gap: 15px;
+      }
+      
+      .image-collector-image-item {
+        position: relative;
+        border: 1px solid #ddd;
+        border-radius: 4px;
+        padding: 5px;
+        background-color: white;
+        box-shadow: 0 2px 5px rgba(0,0,0,0.05);
+        transition: transform 0.2s ease;
+      }
+      
+      .image-collector-image-item:hover {
+        transform: translateY(-3px);
+        box-shadow: 0 5px 10px rgba(0,0,0,0.1);
+      }
+      
+      .image-collector-image-checkbox {
+        position: absolute;
+        top: 8px;
+        right: 8px;
+        width: 20px;
+        height: 20px;
+        cursor: pointer;
+        z-index: 1;
+      }
+      
+      .image-collector-image-preview {
+        width: 100%;
+        height: 150px;
+        object-fit: contain;
+        display: block;
+        margin-bottom: 5px;
+      }
+      
+      .image-collector-image-info {
+        font-size: 12px;
+        color: #666;
+        text-align: center;
+      }
+      
+      .image-collector-button {
+        padding: 6px 12px;
+        border: 1px solid #d9d9d9;
+        border-radius: 4px;
+        background-color: white;
+        cursor: pointer;
+        transition: all 0.3s ease;
+      }
+      
+      .image-collector-button:hover {
+        border-color: #1890ff;
+        color: #1890ff;
+      }
+      
+      .image-collector-button.primary {
+        background-color: #1890ff;
+        border-color: #1890ff;
+        color: white;
+      }
+      
+      .image-collector-button.primary:hover {
+        background-color: #40a9ff;
+        border-color: #40a9ff;
+        color: white;
+      }
+      
+      .image-collector-loading {
+        grid-column: 1 / -1;
+        text-align: center;
+        padding: 50px;
+        color: #666;
+      }
+      
+      @keyframes fadeIn {
+        from { opacity: 0; }
+        to { opacity: 1; }
+      }
+    `;
+
+    // 添加到页面
+    document.head.appendChild(style);
+    document.body.appendChild(dialog);
+
+    // 返回dialog元素供后续使用
+    return dialog;
+  }
+
+  // 获取DOM元素引用
+  const imagesContainer = document.getElementById("image-collector-images");
+  const minWidthSlider = document.getElementById("min-width-slider");
+  const minHeightSlider = document.getElementById("min-height-slider");
+  const minWidthValue = document.getElementById("min-width-value");
+  const minHeightValue = document.getElementById("min-height-value");
+  const formatSelector = document.getElementById("image-format-selector");
+  const selectAllBtn = document.getElementById("select-all-images");
+  const captureBtn = document.getElementById("capture-selected-images");
+  const closeBtn = document.getElementById("close-image-dialog");
+
+  // 渲染图片列表
+  function renderImages(filteredImages) {
+    // 清空容器
+    imagesContainer.innerHTML = "";
+
+    if (filteredImages.length === 0) {
+      imagesContainer.innerHTML =
+        '<div class="image-collector-loading">没有符合条件的图片</div>';
+      return;
+    }
+
+    // 添加图片到容器
+    filteredImages.forEach((imgInfo, index) => {
+      const imgItem = document.createElement("div");
+      imgItem.className = "image-collector-image-item";
+      imgItem.dataset.index = index;
+
+      // 图片内容
+      imgItem.innerHTML = `
+        <input type="checkbox" class="image-collector-image-checkbox" ${
+          imgInfo.selected ? "checked" : ""
+        } data-index="${index}">
+        <img src="${
+          imgInfo.src
+        }" class="image-collector-image-preview" alt="图片预览">
+        <div class="image-collector-image-info">${imgInfo.width} x ${
+        imgInfo.height
+      } ${imgInfo.format}</div>
+      `;
+
+      imagesContainer.appendChild(imgItem);
+    });
+
+    // 绑定选择框事件
+    const checkboxes = document.querySelectorAll(
+      ".image-collector-image-checkbox"
+    );
+    checkboxes.forEach((checkbox) => {
+      checkbox.addEventListener("change", (e) => {
+        const index = parseInt(e.target.dataset.index);
+        imageInfos[index].selected = e.target.checked;
+      });
+    });
+  }
+
+  // 应用筛选条件
+  function applyFilters() {
+    const minWidth = parseInt(minWidthSlider.value);
+    const minHeight = parseInt(minHeightSlider.value);
+    const selectedFormat = formatSelector.value;
+
+    // 筛选图片
+    const filteredImages = imageInfos.filter((img) => {
+      // 格式筛选
+      const formatMatch =
+        selectedFormat === "all" ||
+        img.format.toLowerCase() === selectedFormat.toLowerCase();
+
+      // 尺寸筛选
+      const sizeMatch = img.width >= minWidth && img.height >= minHeight;
+
+      return formatMatch && sizeMatch;
+    });
+
+    renderImages(filteredImages);
+  }
+
+  // 初始化滑块事件
+  minWidthSlider.addEventListener("input", () => {
+    minWidthValue.textContent = minWidthSlider.value;
+    applyFilters();
   });
+
+  minHeightSlider.addEventListener("input", () => {
+    minHeightValue.textContent = minHeightSlider.value;
+    applyFilters();
+  });
+
+  // 格式选择事件
+  formatSelector.addEventListener("change", applyFilters);
+
+  // 全选按钮事件
+  selectAllBtn.addEventListener("click", () => {
+    const checkboxes = document.querySelectorAll(
+      ".image-collector-image-checkbox"
+    );
+    const allChecked = Array.from(checkboxes).every((cb) => cb.checked);
+
+    checkboxes.forEach((cb, i) => {
+      cb.checked = !allChecked;
+      const index = parseInt(cb.dataset.index);
+      imageInfos[index].selected = !allChecked;
+    });
+
+    selectAllBtn.textContent = allChecked ? "全选" : "取消全选";
+  });
+
+  // 采集按钮事件
+  captureBtn.addEventListener("click", () => {
+    const selectedImages = imageInfos.filter((img) => img.selected);
+
+    if (selectedImages.length === 0) {
+      alert("请至少选择一张图片");
+      return;
+    }
+
+    console.log(`开始采集${selectedImages.length}张图片`);
+
+    Promise.all(
+      selectedImages.map(async (imgInfo) => {
+        console.log("下载图片:", imgInfo.src);
+        sendUrlToPage(imgInfo.src, "批量采集");
+      })
+    )
+      .then(() => {
+        alert(`成功采集${selectedImages.length}张图片`);
+        // 关闭弹窗
+        closeDialog();
+      })
+      .catch((error) => {
+        console.error("批量下载图片失败:", error);
+        alert("部分图片采集失败，请查看控制台");
+      });
+  });
+
+  // 关闭按钮事件
+  closeBtn.addEventListener("click", closeDialog);
+
+  // 关闭弹窗函数
+  function closeDialog() {
+    dialog.remove();
+    document.getElementById("image-collector-dialog-styles").remove();
+  }
+
+  // 初始渲染
+  applyFilters();
 }
 
 // 初始化图片采集按钮功能
